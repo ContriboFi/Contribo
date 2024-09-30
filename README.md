@@ -1,6 +1,6 @@
 # Contribo
 <div align="center">
-  <img src="https://imgur.com/a/zHV3lyD" alt="Demo GIF" width="400" height="300">
+  <img src="https://imgur.com/ZpoAt9h" alt="Demo GIF" width="400" height="300">
 </div>
 
 
