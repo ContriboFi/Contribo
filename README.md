@@ -1,7 +1,7 @@
 # Contribo
-<div align="center">
-  <img src="https://i.imgur.com/ZpoAt9h.gif" alt="Demo GIF" width="400" height="300">
-</div>
+
+![Demo](assets/demo/2024-10-01%2001.15.41.jpg)
+
 
 
 
