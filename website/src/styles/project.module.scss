@@ -1,0 +1,98 @@
+@import "./variables/colors";
+
+.project {
+  max-width: 332px;
+}
+
+.title {
+  color: $black;
+  font-family: Inter, serif;
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.details {
+  color: $orange;
+  text-align: right;
+  font-family: Inter, serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.deadlineTitle {
+  color: $black;
+  font-family: Inter, serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.deadline {
+  color: $light-light-grey;
+  font-family: Inter, serif;
+  font-size: 11.206px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.progressContainer {
+  border-radius: 5px;
+  border: 1.12px solid $orange;
+  height: 23px;
+}
+
+.progressFill {
+  border-radius: 5px;
+  background: linear-gradient(270deg, #FEA31B 33.88%, rgba(254, 163, 27, 0.04) 149.25%);
+  height: 22px;
+}
+
+.progressCompleted {
+  border-radius: 5px;
+  background: $orange;
+  height: 22px;
+  text-align: center;
+  color: #FFF;
+  font-family: Inter, serif;
+  font-size: 10.837px;
+  font-style: normal;
+  font-weight: 600;
+  margin-top: 4px;
+  line-height: 22px;
+}
+
+.neededAmountText {
+  color: $black;
+  font-family: Inter, serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.pledgeButton {
+  border-radius: 5px;
+  background: $orange;
+  height: 38px;
+  color: #FFF;
+  font-family: Inter, serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 38px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.mainImage {
+  min-width: 332px;
+  height: 228px;
+  text-align: center;
+  line-height: 228px;
+}

@@ -1,0 +1,47 @@
+@import "./variables/colors";
+
+.header {
+  :global {
+    .menu_items {
+      color: $black;
+      font-family: Inter, serif;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: normal;
+      letter-spacing: 0.12px;
+
+      &__active {
+        color: $orange;
+        font-family: Inter, serif;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+
+        border-bottom: 2px solid $orange;
+      }
+    }
+
+    .right_menu {
+      &__circle {
+        background: $orange;
+        border-radius: 50%;
+        height: 30px;
+        width: 30px;
+        text-align: center;
+        justify-content: center;
+        margin-left: 12px;
+        &_grey {
+            background: $light-grey;
+        }
+        &__svg {
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
+          display: inline-block;
+        }
+      }
+    }
+  }
+}
