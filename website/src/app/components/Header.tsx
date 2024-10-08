@@ -13,16 +13,16 @@ export default function Header() {
             <div className="container-lg">
                 <div className={`flex items-center justify-between pl-3 `}>
                     <div className={`flex items-center menu_items`}>
-                        <Link href="/" className="p-3">
+                        <Link href="/soon" className="p-3">
                             Home
                         </Link>
                         <Link href="/" className="p-3 pl-4 menu_items__active">
                             Active campaigns
                         </Link>
-                        <Link href="/" className="p-3 pl-4">
+                        <Link href="/soon" className="p-3 pl-4">
                             My activities
                         </Link>
-                        <Link href="/" className="p-3 pl-4">
+                        <Link href="/soon" className="p-3 pl-4">
                             Feed
                         </Link>
                     </div>

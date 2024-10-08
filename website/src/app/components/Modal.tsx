@@ -27,10 +27,20 @@ export default function Modal(props: ModalProps) {
                 props.onClose();
             }}>
                 <div className={`${styles.content} z-11`}>
-                    <div style={{backgroundColor: '#FFFFFF'}} className={"rounded-t-xl"}>
+                    <div style={{backgroundColor: '#FFFFFF'}} className={"rounded-t-xl relative"}>
                         <div style={{backgroundColor: props.imageBackground}}
                              className={`w-full rounded-xl ${styles.mainImage} flex justify-center items-center`}>
                             <Image src={props.image} alt={props.title} width={136} height={149} className={''}/>
+                        </div>
+                        <div className={"absolute z-12 top-0 right-0"}>
+                            <button type="button"
+                                    className="text-white font-medium rounded-full text-xs p-2 text-center inline-flex items-center -mr-1 -mt-1" style={{backgroundColor: '#FEA31B'}}>
+                                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                     viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div className="flex flex-col p-4 relative" style={{backgroundColor: '#FFFFFF'}} onClick={(e) => {
@@ -71,7 +81,7 @@ export default function Modal(props: ModalProps) {
                                 className={`${styles.pledgeButton} w-full`}>{amount ? 'Not real money - only for demo' : 'Pledge'}</div>
                         </div>
                         {!publicKey && (
-                            <div className={`flex justify-center items-center absolute z-12 w-full h-full top-0 left-0 ${styles.overlay}`}>
+                            <div className={`flex justify-center items-center absolute z-12 w-full h-full top-0 left-0 p-20 ${styles.overlay} backdrop-blur`}>
 
                                 <WalletMultiButton
                                     style={{

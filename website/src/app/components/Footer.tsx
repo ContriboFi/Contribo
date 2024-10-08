@@ -6,19 +6,19 @@ export default function Footer() {
         <footer className={`row-start-3 flex flex-wrap items-center justify-center w-full ${styles.footer}`}>
             <a
                 className="pr-20"
-                href="#"
+                href="/soon"
             >
                 Home
             </a>
             <a
                 className="pr-20"
-                href="#"
+                href="/soon"
             >
                 Feed
             </a>
             <a
                 className="pr-24"
-                href="#"
+                href="/soon"
             >
                 About
             </a>
@@ -59,7 +59,8 @@ export default function Footer() {
             </a>
             <a
                 className="pl-20"
-                href="#"
+                href="https://github.com/ContriboFi/Contribo"
+                target={"_blank"}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
                     <path
@@ -69,7 +70,8 @@ export default function Footer() {
             </a>
             <a
                 className="pl-20"
-                href="#"
+                href="https://x.com/ContriboFi"
+                target={"_blank"}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
                     <path
