@@ -4,8 +4,13 @@ import Link from "next/link";
 
 import styles from "@/styles/header.module.scss";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
+import {EnumTabs} from "@/app/type/EnumTabs";
 
-export default function Header() {
+export type HeaderProps = {
+    activeTab: EnumTabs;
+}
+
+export default function Header(props: HeaderProps) {
     return (
         <header
             className={`sticky top-0 bg-white w-full ${styles.header} rounded-md`}
@@ -13,16 +18,16 @@ export default function Header() {
             <div className="container-lg">
                 <div className={`flex items-center justify-between pl-3 `}>
                     <div className={`flex items-center menu_items`}>
-                        <Link href="/soon" className="p-3">
+                        <Link href="/home" className={`p-3  ${props.activeTab === EnumTabs.HOME?'menu_items__active':''}`}>
                             Home
                         </Link>
-                        <Link href="/" className="p-3 pl-4 menu_items__active">
+                        <Link href="/" className={`p-3 pl-4 ${props.activeTab === EnumTabs.CAMPAIGNS?'menu_items__active':''}`}>
                             Active campaigns
                         </Link>
-                        <Link href="/soon" className="p-3 pl-4">
+                        <Link href="/myactivity" className={`p-3 pl-4 ${props.activeTab === EnumTabs.MY_ACTIVITY?'menu_items__active':''}`}>
                             My activities
                         </Link>
-                        <Link href="/soon" className="p-3 pl-4">
+                        <Link href="/feed" className={`p-3 pl-4 ${props.activeTab === EnumTabs.FEED?'menu_items__active':''}`}>
                             Feed
                         </Link>
                     </div>

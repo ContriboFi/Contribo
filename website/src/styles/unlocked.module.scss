@@ -1,0 +1,45 @@
+@import "./variables/colors";
+
+.progressLabel {
+    color: $orange;
+    font-family: Inter, serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: normal;
+}
+
+.unlockLabel {
+  color: $orange;
+  font-family: Inter, serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.progressContainer {
+  border-radius: 5px;
+  border: 1.12px solid $orange;
+  height: 6px;
+}
+
+.progressFill {
+  border-radius: 2px;
+  background: linear-gradient(270deg, #FEA31B 33.88%, rgba(254, 163, 27, 0.04) 149.25%);
+  height: 5px;
+}
+
+.progressCompleted {
+  border-radius: 2px;
+  background: $orange;
+  height: 5px;
+  text-align: center;
+  color: #FFF;
+  font-family: Inter, serif;
+  font-size: 10.837px;
+  font-style: normal;
+  font-weight: 600;
+  margin-top: 4px;
+  line-height: 5px;
+}

@@ -50,3 +50,24 @@ body {
   /*box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);*/
     background: rgba(255, 255, 255, 0.6);
 }
+
+.buttonBackground {
+  background-color: #F7F2EC;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.buttonActive {
+  color: #FEA31B;
+}
+
+.buttonInactive {
+  color: #6A6A6A;
+  background-color: #F5F5F5;
+}
+
+.claimActive {
+  color: #56C07F;
+  background-color: #ECF7F0;
+}

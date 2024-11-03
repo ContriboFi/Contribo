@@ -90,6 +90,22 @@
   cursor: pointer;
 }
 
+.pledgeButtonBlank {
+  border-radius: 5px;
+  border-color: $orange;
+  border-width: 1px;
+  background: #FFF;
+  height: 38px;
+  color: $orange;
+  font-family: Inter, serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 38px;
+  text-align: center;
+  cursor: pointer;
+}
+
 .mainImage {
   min-width: 332px;
   height: 228px;
