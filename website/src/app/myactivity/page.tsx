@@ -14,6 +14,8 @@ import {useWallet} from "@solana/wallet-adapter-react";
 export default function Page() {
     const {publicKey} = useWallet();
 
+    const [allowDemo, setAllowDemo] = React.useState(false);
+
     return (
         <div
             className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -26,10 +28,11 @@ export default function Page() {
                     </div>
                 </div>
                 <ProjectsListSection/>
-                {!publicKey && (
-                    <div className={`flex justify-center items-center absolute z-12 w-full h-full top-0 left-0 p-20 ${styles.overlay} backdrop-blur`}>
+                {!publicKey && !allowDemo && (
+                    <div className={`flex flex-col justify-center items-center absolute z-12 w-full h-full top-0 left-0 p-20  ${styles.overlay} backdrop-blur`}>
 
                         <WalletMultiButton
+                            className={` max-w-60`}
                             style={{
                                 borderRadius: "5px",
                                 background: "#FEA31B",
@@ -42,8 +45,12 @@ export default function Page() {
                                 lineHeight: "38px",
                                 textAlign: "center",
                                 cursor: "pointer",
+                                maxWidth: "300px",
+                                margin: "0 auto"
                             }}
                         />
+                        <div className={'pt-8 text-[12px]'}>or</div>
+                        <div className={'pt-8 text-[14px] text-orange-500 cursor-pointer'} onClick={()=>setAllowDemo(true)}>View the demo</div>
                     </div>
                 )}
             </main>
