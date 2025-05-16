@@ -1,0 +1,35 @@
+{
+  "version": "0.1.0",
+  "name": "contribute",
+  "metadata": {
+    "address": "7mHhw5gkkVX59KvbpHCF4fumCRQtTDwEAzWJN5K1q8if"
+  },
+  "accounts": [
+    {
+      "name": "Pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "admin",               "type": "publicKey" },
+          { "name": "usdcRecipient",       "type": "publicKey" },
+          { "name": "currentCap",          "type": "u64" },
+          { "name": "enabled",             "type": "bool" },
+          { "name": "tokenMint",           "type": "publicKey" },
+          { "name": "tokenName",           "type": "string" },
+          { "name": "tokenSymbol",         "type": "string" },
+          { "name": "poolSeed",            "type": "string" },
+          { "name": "authority",           "type": "publicKey" },
+          { "name": "authorityBump",       "type": "u8" },
+          { "name": "usdcMint",            "type": "publicKey" },
+          { "name": "minContribution",     "type": "u64" },
+          { "name": "maxContribution",     "type": "u64" },
+          { "name": "maxUsdcCap",          "type": "u64" },
+          { "name": "maxTokenSupply",      "type": "u64" },
+          { "name": "totalTokensMinted",   "type": "u64" },
+          { "name": "totalContributors",   "type": "u64" }
+        ]
+      }
+    }
+  ],
+  "instructions": []
+}

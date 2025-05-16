@@ -16,10 +16,10 @@ export default function ProjectItem({project, onClaimClick, onWithdrawClick, onV
     return (
         <div className="flex w-full bg-gray-100 p-2">
             <div className="flex flex-row w-full bg-white mt-2 p-2 rounded-md min-h-16 items-center align-baseline">
-                <div className="flex w-2/12 font-semibold text-xs"><ProjectIcon project={project}/>
+                <div className="flex w-2/12 font-semibold text-xs" onClick={()=>onWithdrawClick(project)}><ProjectIcon project={project}/>
                     <div className="ml-1 pt-3">{project.title}</div>
                 </div>
-                <div className="flex w-2/12 font-semibold text-xs">{new Intl.NumberFormat('en-US', {
+                <div className="flex w-2/12 font-semibold text-xs"  onClick={()=>onWithdrawClick(project)}>{new Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: 'USD',
                     maximumFractionDigits: 0
