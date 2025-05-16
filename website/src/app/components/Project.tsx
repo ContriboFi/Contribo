@@ -28,7 +28,7 @@ export default function Project(props: ProjectProps) {
 
     return (
         <>
-            <div className={`basis-1/4 ${styles.project}`}>
+            <div className={`basis-1 md:basis-1/4 ${styles.project}`}>
                 <div style={{backgroundColor: '#FFFFFF'}} className={"rounded-t-xl"}>
                     <div style={{backgroundColor: props.imageBackground}}
                          className={`w-full rounded-xl ${styles.mainImage} flex justify-center items-center`}>

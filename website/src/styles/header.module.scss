@@ -2,26 +2,6 @@
 
 .header {
   :global {
-    .menu_items {
-      color: $black;
-      font-family: Inter, serif;
-      font-size: 12px;
-      font-style: normal;
-      font-weight: 500;
-      line-height: normal;
-      letter-spacing: 0.12px;
-
-      &__active {
-        color: $orange;
-        font-family: Inter, serif;
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 700;
-        line-height: normal;
-
-        border-bottom: 2px solid $orange;
-      }
-    }
 
     .right_menu {
       &__circle {
@@ -32,15 +12,73 @@
         text-align: center;
         justify-content: center;
         margin-left: 12px;
+
         &_grey {
-            background: $light-grey;
+          background: $light-grey;
         }
+
         &__svg {
           width: 18px;
           height: 18px;
           flex-shrink: 0;
           display: inline-block;
         }
+      }
+    }
+
+    div.open-nav {
+      display: block;
+      position: fixed;
+      top: 72px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+    }
+
+    .nav-toggle-btn {
+      .close {
+        display: none;
+      }
+
+      &.open-nav {
+        .show{
+          display: none;
+        }
+        .close {
+          display: block;
+        }
+      }
+    }
+  }
+}
+.main_nav {
+  a {
+    letter-spacing: -0.13px;
+    color: var(--color-stone-500);
+    font-weight: 500;
+
+    @media (prefers-color-scheme: dark) {
+      color: rgba(255,255,255,.5);
+    }
+
+    &:hover {
+      background: var(--color-stone-50);
+      color: var(--color-stone-950);
+      @media (prefers-color-scheme: dark) {
+        background: #242424;
+        color: #fff;
+      }
+    }
+  }
+
+  :global {
+    .menu_items__active {
+      background: var(--color-stone-50);
+      color: var(--color-stone-950);
+      @media (prefers-color-scheme: dark) {
+        background: #242424;
+        color: #fff;
       }
     }
   }

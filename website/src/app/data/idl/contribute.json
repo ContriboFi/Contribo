@@ -1,0 +1,321 @@
+{
+  "version": "0.1.0",
+  "name": "contribute",
+  "address": "7mHhw5gkkVX59KvbpHCF4fumCRQtTDwEAzWJN5K1q8if",
+  "metadata": {
+    "constants": {
+      "BOOTSTRAP_SUPER_ADMIN": "69CjSGZG3h26dake57CqwYqxPLhtqFvHPxFFZDKeyCGF",
+      "ADMIN_REGISTRY_SEED": "admin-registry",
+      "DEFAULT_TIMELOCK_DURATION": 172800
+    }
+  },
+  "instructions": [
+    {
+      "name": "initializeAdminRegistry",
+      "accounts": [
+        { "name": "initializer", "isMut": true, "isSigner": true },
+        { "name": "adminRegistry", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false },
+        { "name": "rent", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "proposeNewSuperAdmin",
+      "accounts": [
+        { "name": "superAdmin", "isMut": true, "isSigner": true },
+        { "name": "adminRegistry", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "newSuperAdmin", "type": "publicKey" }
+      ]
+    },
+    {
+      "name": "executeSuperAdminChange",
+      "accounts": [
+        { "name": "superAdmin", "isMut": true, "isSigner": true },
+        { "name": "adminRegistry", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelSuperAdminChange",
+      "accounts": [
+        { "name": "superAdmin", "isMut": true, "isSigner": true },
+        { "name": "adminRegistry", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "addAdmin",
+      "accounts": [
+        { "name": "superAdmin", "isMut": true, "isSigner": true },
+        { "name": "adminRegistry", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "newAdmin", "type": "publicKey" }
+      ]
+    },
+    {
+      "name": "removeAdmin",
+      "accounts": [
+        { "name": "superAdmin", "isMut": true, "isSigner": true },
+        { "name": "adminRegistry", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "adminToRemove", "type": "publicKey" }
+      ]
+    },
+    {
+      "name": "createPool",
+      "accounts": [
+        { "name": "admin", "isMut": true, "isSigner": true },
+        { "name": "adminRegistry", "isMut": true, "isSigner": false },
+        { "name": "pool", "isMut": true, "isSigner": false },
+        { "name": "tokenMint", "isMut": true, "isSigner": false },
+        { "name": "authority", "isMut": false, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false },
+        { "name": "rent", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "poolSeed", "type": "string" },
+        { "name": "usdcRecipient", "type": "publicKey" },
+        { "name": "tokenName", "type": "string" },
+        { "name": "tokenSymbol", "type": "string" },
+        { "name": "enabled", "type": "bool" },
+        { "name": "minContribution", "type": "u64" },
+        { "name": "maxContribution", "type": "u64" },
+        { "name": "maxUsdcCap", "type": "u64" },
+        { "name": "usdcMint", "type": "publicKey" }
+      ]
+    },
+    {
+      "name": "toggleEnabled",
+      "accounts": [
+        { "name": "admin", "isMut": true, "isSigner": true },
+        { "name": "pool", "isMut": true, "isSigner": false }
+      ],
+      "args": [
+        { "name": "poolSeed", "type": "string" },
+        { "name": "enabled", "type": "bool" }
+      ]
+    },
+    {
+      "name": "recoverTokens",
+      "accounts": [
+        { "name": "admin", "isMut": true, "isSigner": true },
+        { "name": "pool", "isMut": true, "isSigner": false },
+        { "name": "tokenMint", "isMut": true, "isSigner": false },
+        { "name": "tokenAccount", "isMut": true, "isSigner": false },
+        { "name": "authority", "isMut": false, "isSigner": false },
+        { "name": "recipient", "isMut": false, "isSigner": false },
+        { "name": "recipientTokenAccount", "isMut": true, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "poolSeed", "type": "string" },
+        { "name": "amount", "type": "u64" }
+      ]
+    },
+    {
+      "name": "initUserContribution",
+      "accounts": [
+        { "name": "user", "isMut": true, "isSigner": true },
+        { "name": "pool", "isMut": false, "isSigner": false },
+        { "name": "userContribution", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false },
+        { "name": "rent", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "poolSeed", "type": "string" }
+      ]
+    },
+    {
+      "name": "getRemainingContribution",
+      "accounts": [
+        { "name": "user", "isMut": false, "isSigner": true },
+        { "name": "pool", "isMut": false, "isSigner": false },
+        { "name": "userContribution", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "poolSeed", "type": "string" }
+      ]
+    },
+    {
+      "name": "contribute",
+      "accounts": [
+        { "name": "user", "isMut": true, "isSigner": true },
+        { "name": "pool", "isMut": true, "isSigner": false },
+        { "name": "userContribution", "isMut": true, "isSigner": false },
+        { "name": "userUsdcAccount", "isMut": true, "isSigner": false },
+        { "name": "recipientUsdcAccount", "isMut": true, "isSigner": false },
+        { "name": "recipient", "isMut": false, "isSigner": false },
+        { "name": "usdcMint", "isMut": false, "isSigner": false },
+        { "name": "tokenMint", "isMut": true, "isSigner": false },
+        { "name": "userTokenAccount", "isMut": true, "isSigner": false },
+        { "name": "authority", "isMut": false, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false },
+        { "name": "associatedTokenProgram", "isMut": false, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false },
+        { "name": "rent", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "poolSeed", "type": "string" },
+        { "name": "amount", "type": "u64" }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "adminRegistry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "superAdmin", "type": "publicKey" },
+          { "name": "proposedSuperAdmin", "type": { "option": "publicKey" } },
+          { "name": "proposedAt", "type": "i64" },
+          { "name": "timelockDuration", "type": "i64" },
+          { "name": "authorizedAdmins", "type": { "vec": "publicKey" } },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "admin", "type": "publicKey" },
+          { "name": "usdcRecipient", "type": "publicKey" },
+          { "name": "currentCap", "type": "u64" },
+          { "name": "enabled", "type": "bool" },
+          { "name": "tokenMint", "type": "publicKey" },
+          { "name": "tokenName", "type": "string" },
+          { "name": "tokenSymbol", "type": "string" },
+          { "name": "poolSeed", "type": "string" },
+          { "name": "authority", "type": "publicKey" },
+          { "name": "authorityBump", "type": "u8" },
+          { "name": "usdcMint", "type": "publicKey" },
+          { "name": "minContribution", "type": "u64" },
+          { "name": "maxContribution", "type": "u64" },
+          { "name": "maxUsdcCap", "type": "u64" },
+          { "name": "maxTokenSupply", "type": "u64" },
+          { "name": "totalTokensMinted", "type": "u64" },
+          { "name": "totalContributors", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "userContribution",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "user", "type": "publicKey" },
+          { "name": "pool", "type": "publicKey" },
+          { "name": "amount", "type": "u64" }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "SuperAdminChangeProposed",
+      "fields": [
+        { "name": "currentSuperAdmin", "type": "publicKey", "index": false },
+        { "name": "proposedSuperAdmin", "type": "publicKey", "index": false },
+        { "name": "executableAfter", "type": "i64", "index": false }
+      ]
+    },
+    {
+      "name": "SuperAdminChanged",
+      "fields": [
+        { "name": "oldSuperAdmin", "type": "publicKey", "index": false },
+        { "name": "newSuperAdmin", "type": "publicKey", "index": false }
+      ]
+    },
+    {
+      "name": "AdminAdded",
+      "fields": [
+        { "name": "admin", "type": "publicKey", "index": false },
+        { "name": "addedBy", "type": "publicKey", "index": false }
+      ]
+    },
+    {
+      "name": "AdminRemoved",
+      "fields": [
+        { "name": "admin", "type": "publicKey", "index": false },
+        { "name": "removedBy", "type": "publicKey", "index": false }
+      ]
+    },
+    {
+      "name": "PoolCreated",
+      "fields": [
+        { "name": "admin", "type": "publicKey", "index": false },
+        { "name": "pool", "type": "publicKey", "index": false },
+        { "name": "tokenMint", "type": "publicKey", "index": false },
+        { "name": "usdcRecipient", "type": "publicKey", "index": false },
+        { "name": "tokenName", "type": "string", "index": false },
+        { "name": "tokenSymbol", "type": "string", "index": false },
+        { "name": "minContribution", "type": "u64", "index": false },
+        { "name": "maxContribution", "type": "u64", "index": false },
+        { "name": "maxUsdcCap", "type": "u64", "index": false },
+        { "name": "usdcMint", "type": "publicKey", "index": false }
+      ]
+    },
+    {
+      "name": "PoolStatusChanged",
+      "fields": [
+        { "name": "pool", "type": "publicKey", "index": false },
+        { "name": "enabled", "type": "bool", "index": false },
+        { "name": "admin", "type": "publicKey", "index": false }
+      ]
+    },
+    {
+      "name": "TokensRecovered",
+      "fields": [
+        { "name": "pool", "type": "publicKey", "index": false },
+        { "name": "tokenMint", "type": "publicKey", "index": false },
+        { "name": "amount", "type": "u64", "index": false },
+        { "name": "recipient", "type": "publicKey", "index": false },
+        { "name": "admin", "type": "publicKey", "index": false }
+      ]
+    },
+    {
+      "name": "Contributed",
+      "fields": [
+        { "name": "user", "type": "publicKey", "index": false },
+        { "name": "pool", "type": "publicKey", "index": false },
+        { "name": "usdcAmount", "type": "u64", "index": false },
+        { "name": "tokensMinted", "type": "u64", "index": false },
+        { "name": "totalUsdc", "type": "u64", "index": false }
+      ]
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "InvalidParameter", "msg": "Invalid parameter" },
+    { "code": 6001, "name": "Overflow", "msg": "Overflow occurred during calculation" },
+    { "code": 6002, "name": "ContributionDisabled", "msg": "Contribution is disabled for this pool" },
+    { "code": 6003, "name": "Unauthorized", "msg": "Unauthorized operation" },
+    { "code": 6004, "name": "BelowMinimumContribution", "msg": "Contribution is below minimum amount" },
+    { "code": 6005, "name": "AboveMaximumContribution", "msg": "Contribution is above maximum amount" },
+    { "code": 6006, "name": "ZeroAddress", "msg": "Zero address is not allowed" },
+    { "code": 6007, "name": "MaxCapReached", "msg": "Maximum USDC cap has been reached" },
+    { "code": 6008, "name": "MaxTokenSupplyReached", "msg": "Maximum token supply has been reached" },
+    { "code": 6009, "name": "PoolSeedMismatch", "msg": "Pool seed mismatch" },
+    { "code": 6010, "name": "MaxUserContributionReached", "msg": "User has reached maximum contribution amount" },
+    { "code": 6011, "name": "InsufficientFunds", "msg": "Insufficient funds for the operation" },
+
+    { "code": 6013, "name": "AdminUnauthorized", "msg": "Unauthorized admin operation" },
+    { "code": 6014, "name": "AdminAlreadyExists", "msg": "Admin already exists in the registry" },
+    { "code": 6015, "name": "AdminNotFound", "msg": "Admin not found in the registry" },
+    { "code": 6016, "name": "CannotRemoveSuperAdmin", "msg": "Cannot remove the super admin from the admin list" },
+    { "code": 6017, "name": "NoProposedChange", "msg": "No proposed change exists" },
+    { "code": 6018, "name": "TimelockNotExpired", "msg": "Timelock period has not expired yet" }
+  ]
+}

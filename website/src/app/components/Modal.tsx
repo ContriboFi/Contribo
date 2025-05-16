@@ -17,6 +17,7 @@ export type ModalProps = {
 
 export default function Modal(props: ModalProps) {
     const [amount, setAmount] = React.useState(0);
+    const [allowDemo, setAllowDemo] = React.useState(false);
 
     const {publicKey} = useWallet();
 
@@ -80,8 +81,9 @@ export default function Modal(props: ModalProps) {
                             <div
                                 className={`${styles.pledgeButton} w-full`}>{amount ? 'Not real money - only for demo' : 'Pledge'}</div>
                         </div>
-                        {!publicKey && (
-                            <div className={`flex justify-center items-center absolute z-12 w-full h-full top-0 left-0 p-20 ${styles.overlay} backdrop-blur`}>
+                        {!publicKey && !allowDemo && (
+                            <div
+                                className={`flex flex-col justify-center items-center absolute z-12 w-full h-full top-0 left-0 p-20 ${styles.overlay} backdrop-blur`}>
 
                                 <WalletMultiButton
                                     style={{
@@ -97,7 +99,12 @@ export default function Modal(props: ModalProps) {
                                         textAlign: "center",
                                         cursor: "pointer",
                                     }}
-                                />
+                                >Connect wallet</WalletMultiButton>
+                                <div className={'pt-8 text-[12px]'}>or</div>
+                                <div
+                                    className={`mt-8 p-2 text-[14px] text-orange-500 cursor-pointer border-orange-500 rounded-md border-2`}
+                                    onClick={() => setAllowDemo(true)}>See demo without wallet
+                                </div>
                             </div>
                         )}
                     </div>
