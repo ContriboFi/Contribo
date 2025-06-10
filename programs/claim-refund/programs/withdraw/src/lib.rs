@@ -1,15 +1,17 @@
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{self, Burn, Mint, Token, TokenAccount, Transfer},
+};
 use std::str::FromStr;
 
-declare_id!("PROGRAM_ID_HERE");
+declare_id!("PROGRAM_ID");
 
 // Replace the hardcoded admin with a super admin account
-pub const SUPER_ADMIN: &str = "SUPER_ADMIN_PUBKEY_HERE";
+pub const SUPER_ADMIN: &str = "SUPER_ADMIN_ADDRESS";
 
 // Constants for timelock delays (in seconds)
-pub const TIMELOCK_DELAY: i64 = 172800; // 48 hours for parameter changes
+pub const TIMELOCK_DELAY: i64 = 86400; // 24 hours for parameter changes
 
 #[program]
 pub mod claim_refund {
@@ -201,10 +203,10 @@ pub mod claim_refund {
         pool.max_lct_cap = max_lct_cap;
 
         // Create and store PDA info for authority
-        let seeds = [b"authority", pool_seed.as_bytes()];
-        let (authority_pda, bump) = Pubkey::find_program_address(&seeds, ctx.program_id);
-        pool.authority = authority_pda;
-        pool.authority_bump = bump;
+        let (pool_authority, authority_bump) =
+            Pubkey::find_program_address(&[b"authority", pool_seed.as_bytes()], ctx.program_id);
+        pool.authority = pool_authority;
+        pool.authority_bump = authority_bump;
 
         // Initialize timelock fields (only for max cap changes now)
         pool.pending_max_cap_change = false;
@@ -272,15 +274,15 @@ pub mod claim_refund {
             ExchangeError::InsufficientPoolBalance
         );
 
+        // Store all pool data needed for PDA derivation before updating state
+        let pool_seed_bytes = pool.pool_seed.as_bytes().to_vec();
+        let authority_bump = pool.authority_bump;
+
         // Update state before external calls
         pool.total_lct_exchanged = new_total;
 
         // Generate signer seeds for PDA operations
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            b"authority",
-            pool.pool_seed.as_bytes(),
-            &[pool.authority_bump],
-        ]];
+        let pool_authority_seeds = &[b"authority".as_ref(), &pool_seed_bytes, &[authority_bump]];
 
         // IMPROVED ORDER OF OPERATIONS:
         // 1. First transfer return tokens from pool to user - this ensures user gets value first
@@ -292,7 +294,7 @@ pub mod claim_refund {
                     to: ctx.accounts.user_return_token_account.to_account_info(),
                     authority: ctx.accounts.pool_authority.to_account_info(),
                 },
-                signer_seeds,
+                &[pool_authority_seeds],
             ),
             return_token_amount,
         )?;
@@ -319,7 +321,7 @@ pub mod claim_refund {
                     from: ctx.accounts.recipient_lct_account.to_account_info(),
                     authority: ctx.accounts.pool_authority.to_account_info(),
                 },
-                signer_seeds,
+                &[pool_authority_seeds],
             ),
             lct_amount,
         )?;
@@ -570,7 +572,6 @@ pub struct CreateExchangePool<'info> {
     )]
     pub pool_authority: UncheckedAccount<'info>,
 
-    // Initialize the recipient LCT account during pool creation
     #[account(
         init,
         payer = admin,
@@ -581,7 +582,6 @@ pub struct CreateExchangePool<'info> {
     )]
     pub lct_recipient_account: Account<'info, TokenAccount>,
 
-    // Initialize the pool return token account during pool creation
     #[account(
         init,
         payer = admin,

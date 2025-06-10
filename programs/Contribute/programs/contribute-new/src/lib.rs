@@ -3,11 +3,11 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 use std::str::FromStr;
 
-declare_id!("PROGRAM_ID_HERE");
+declare_id!("PROGRAM_ID");
 
 // Initial super admin that will be used to bootstrap the admin registry
 // This is used only once when initializing the admin registry
-pub const BOOTSTRAP_SUPER_ADMIN: &str = "SUPER_ADMIN_PUBKEY_HERE";
+pub const BOOTSTRAP_SUPER_ADMIN: &str = "SUPER_ADMIN_ADDRESS";
 
 // Seed for the admin registry PDA
 pub const ADMIN_REGISTRY_SEED: &[u8] = b"admin-registry";
@@ -87,23 +87,8 @@ pub mod contribute {
     /// Initialize the admin registry (one-time operation)
     pub fn initialize_admin_registry(ctx: Context<InitializeAdminRegistry>) -> Result<()> {
         let registry = &mut ctx.accounts.admin_registry;
-        let initializer = &ctx.accounts.initializer;
-
-        // Verify initializer is the bootstrap super admin
-        let bootstrap_super_admin = Pubkey::from_str(BOOTSTRAP_SUPER_ADMIN).unwrap();
-        require!(
-            initializer.key() == bootstrap_super_admin,
-            AdminError::Unauthorized
-        );
-
-        // Initialize the admin registry
-        registry.super_admin = initializer.key();
-        registry.proposed_super_admin = None;
-        registry.proposed_at = 0;
-        registry.timelock_duration = DEFAULT_TIMELOCK_DURATION;
-        registry.authorized_admins = vec![initializer.key()]; // Add the super admin as a default authorized admin
+        registry.authorized_admins = vec![ctx.accounts.initializer.key()];
         registry.bump = ctx.bumps.admin_registry;
-
         Ok(())
     }
 
@@ -262,31 +247,25 @@ pub mod contribute {
         Ok(())
     }
 
-    /// Get the remaining amount a user can contribute to the pool
+    /// Get the remaining contribution amount for a user
     pub fn get_remaining_contribution(
         ctx: Context<GetContribution>,
-        pool_seed: String,
+        _pool_seed: String,
     ) -> Result<u64> {
         let pool = &ctx.accounts.pool;
         let user_contribution = &ctx.accounts.user_contribution;
 
-        // Verify pool seed match
-        require!(pool_seed == pool.pool_seed, PoolError::PoolSeedMismatch);
-
-        // Calculate remaining allowed contribution
-        if user_contribution.amount >= pool.max_contribution {
-            return Ok(0); // User has reached the maximum allowed contribution
-        }
-
-        let remaining = pool
-            .max_contribution
-            .checked_sub(user_contribution.amount)
-            .ok_or(PoolError::Overflow)?;
+        // Calculate remaining contribution
+        let remaining = if user_contribution.amount >= pool.max_contribution {
+            0
+        } else {
+            pool.max_contribution - user_contribution.amount
+        };
 
         Ok(remaining)
     }
 
-    /// Creates a new fundraising pool
+    /// Create a new pool
     pub fn create_pool(
         ctx: Context<CreatePool>,
         pool_seed: String,
@@ -299,94 +278,61 @@ pub mod contribute {
         max_usdc_cap: u64,
         usdc_mint: Pubkey,
     ) -> Result<()> {
-        let registry = &ctx.accounts.admin_registry;
+        let pool = &mut ctx.accounts.pool;
         let admin = &ctx.accounts.admin;
+        let admin_registry = &ctx.accounts.admin_registry;
 
-        // Verify admin is authorized to create pools
+        // Verify admin is authorized
         require!(
-            registry.authorized_admins.contains(&admin.key()),
+            admin_registry.authorized_admins.contains(&admin.key()),
             AdminError::Unauthorized
         );
 
-        // Validate parameters
-        require!(!pool_seed.is_empty(), PoolError::InvalidParameter);
-        require!(!token_name.is_empty(), PoolError::InvalidParameter);
-        require!(!token_symbol.is_empty(), PoolError::InvalidParameter);
-        require!(usdc_recipient != Pubkey::default(), PoolError::ZeroAddress);
-        require!(min_contribution > 0, PoolError::InvalidParameter);
-        require!(
-            max_contribution >= min_contribution,
-            PoolError::InvalidParameter
-        );
-        require!(max_usdc_cap > 0, PoolError::InvalidParameter);
-
-        // Calculate max token supply automatically as 10x the max USDC cap
-        // Note: Since 1 USDC = 1,000,000 (6 decimals) and 1 SPL token = 1,000,000,000 (9 decimals),
-        // we use a multiplication factor of 10,000 to maintain the 10:1 ratio
-        let max_token_supply = max_usdc_cap
-            .checked_mul(10_000)
-            .ok_or(PoolError::Overflow)?;
-
-        let pool = &mut ctx.accounts.pool;
-
-        // Set pool seed FIRST before any other operations
-        pool.pool_seed = pool_seed.clone();
-
-        // Set pool parameters
-        pool.admin = admin.key(); // The creator becomes the sole admin of this pool
+        // Initialize pool
+        pool.admin = admin.key();
         pool.usdc_recipient = usdc_recipient;
         pool.current_cap = 0;
         pool.enabled = enabled;
         pool.token_mint = ctx.accounts.token_mint.key();
-        pool.token_name = token_name.clone();
-        pool.token_symbol = token_symbol.clone();
-
-        // Set contribution limits
+        pool.token_name = token_name;
+        pool.token_symbol = token_symbol;
+        pool.pool_seed = pool_seed.clone();
+        pool.authority = ctx.accounts.authority.key();
+        pool.authority_bump = ctx.bumps.authority;
+        pool.usdc_mint = usdc_mint;
         pool.min_contribution = min_contribution;
         pool.max_contribution = max_contribution;
         pool.max_usdc_cap = max_usdc_cap;
-        pool.max_token_supply = max_token_supply;
+        pool.max_token_supply = max_usdc_cap; // 1:1 ratio for now
         pool.total_tokens_minted = 0;
         pool.total_contributors = 0;
+        pool.bump = ctx.bumps.pool;
 
-        // Create and store PDA info
-        let seeds = [b"authority", pool_seed.as_bytes()];
-        let (authority_pda, bump) = Pubkey::find_program_address(&seeds, ctx.program_id);
-        pool.authority = authority_pda;
-        pool.authority_bump = bump;
-
-        // Store USDC mint address provided by parameter
-        pool.usdc_mint = usdc_mint;
-
-        // Emit PoolCreated event
         emit!(PoolCreated {
             admin: admin.key(),
             pool: pool.key(),
-            token_mint: ctx.accounts.token_mint.key(),
-            usdc_recipient,
-            token_name: token_name.clone(),
-            token_symbol: token_symbol.clone(),
-            min_contribution,
-            max_contribution,
-            max_usdc_cap,
-            usdc_mint,
+            token_mint: pool.token_mint,
+            usdc_recipient: pool.usdc_recipient,
+            token_name: pool.token_name.clone(),
+            token_symbol: pool.token_symbol.clone(),
+            min_contribution: pool.min_contribution,
+            max_contribution: pool.max_contribution,
+            max_usdc_cap: pool.max_usdc_cap,
+            usdc_mint: pool.usdc_mint,
         });
 
         Ok(())
     }
 
-    /// Initialize a user contribution account for a specific pool
+    /// Initialize a user's contribution account for a pool
     pub fn init_user_contribution(
         ctx: Context<InitUserContribution>,
-        pool_seed: String,
+        _pool_seed: String,
     ) -> Result<()> {
-        let pool = &ctx.accounts.pool;
         let user_contribution = &mut ctx.accounts.user_contribution;
+        let pool = &ctx.accounts.pool;
 
-        // Verify pool seed match
-        require!(pool_seed == pool.pool_seed, PoolError::PoolSeedMismatch);
-
-        // Initialize the user contribution account
+        // Initialize user contribution
         user_contribution.user = ctx.accounts.user.key();
         user_contribution.pool = pool.key();
         user_contribution.amount = 0;
@@ -394,101 +340,106 @@ pub mod contribute {
         Ok(())
     }
 
-    /// Contribute USDC directly to the recipient and receive tokens in return
-    pub fn contribute(ctx: Context<Contribute>, pool_seed: String, amount: u64) -> Result<()> {
+    /// Contribute USDC to a pool
+    pub fn contribute(ctx: Context<Contribute>, _pool_seed: String, amount: u64) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
         let user_contribution = &mut ctx.accounts.user_contribution;
-        let user_key = ctx.accounts.user.key();
+        let user = &ctx.accounts.user;
 
-        // Verify pool is valid and active
-        require!(pool_seed == pool.pool_seed, PoolError::PoolSeedMismatch);
+        // Verify pool is enabled
         require!(pool.enabled, PoolError::ContributionDisabled);
 
-        // Validate contribution amount
+        // Verify contribution amount
+        require!(amount > 0, PoolError::InvalidParameter);
         require!(
             amount >= pool.min_contribution,
             PoolError::BelowMinimumContribution
         );
-
-        // Update user contribution
-        let new_user_contribution = user_contribution
-            .amount
-            .checked_add(amount)
-            .ok_or(PoolError::Overflow)?;
-
-        // Check user's total contribution against max allowed
         require!(
-            new_user_contribution <= pool.max_contribution,
+            amount <= pool.max_contribution,
             PoolError::AboveMaximumContribution
         );
 
-        // Check max cap
-        let new_total = pool
+        // Verify user hasn't exceeded their maximum contribution
+        let new_user_total = user_contribution
+            .amount
+            .checked_add(amount)
+            .ok_or(PoolError::Overflow)?;
+        require!(
+            new_user_total <= pool.max_contribution,
+            PoolError::MaxUserContributionReached
+        );
+
+        // Verify pool hasn't reached its maximum cap
+        let new_pool_total = pool
             .current_cap
             .checked_add(amount)
             .ok_or(PoolError::Overflow)?;
-        require!(new_total <= pool.max_usdc_cap, PoolError::MaxCapReached);
+        require!(new_pool_total <= pool.max_usdc_cap, PoolError::MaxCapReached);
 
-        // Calculate tokens to mint (10:1 ratio)
-        // Since 1 USDC = 1,000,000 (6 decimals) and 1 SPL token = 1,000,000,000 (9 decimals),
-        // we use a multiplication factor of 10,000 to maintain the 10:1 ratio
-        let tokens_to_mint = amount.checked_mul(10_000).ok_or(PoolError::Overflow)?;
+        // Verify token mint authority
+        require!(
+            ctx.accounts.token_mint.mint_authority.unwrap() == ctx.accounts.authority.key(),
+            PoolError::InvalidAuthority
+        );
 
-        // IMPORTANT: First mint tokens before transferring USDC
-        // This ensures we don't take USDC if token minting fails
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            b"authority",
-            pool.pool_seed.as_bytes(),
-            &[pool.authority_bump],
-        ]];
+        // Transfer USDC from user to recipient
+        let transfer_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.user_usdc_account.to_account_info(),
+                to: ctx.accounts.recipient_usdc_account.to_account_info(),
+                authority: user.to_account_info(),
+            },
+        );
+        token::transfer(transfer_ctx, amount)?;
 
-        token::mint_to(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                MintTo {
-                    mint: ctx.accounts.token_mint.to_account_info(),
-                    to: ctx.accounts.user_token_account.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info(),
-                },
-                signer_seeds,
-            ),
-            tokens_to_mint,
-        )?;
+        // Calculate tokens to mint (1:1 ratio for now)
+        let tokens_to_mint = amount;
 
-        // After tokens are successfully minted, transfer USDC
-        token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.user_usdc_account.to_account_info(),
-                    to: ctx.accounts.recipient_usdc_account.to_account_info(),
-                    authority: ctx.accounts.user.to_account_info(),
-                },
-            ),
-            amount,
-        )?;
-
-        // Update pool status
-        pool.current_cap = new_total;
-        pool.total_tokens_minted = pool
+        // Verify we haven't exceeded maximum token supply
+        let new_token_total = pool
             .total_tokens_minted
             .checked_add(tokens_to_mint)
             .ok_or(PoolError::Overflow)?;
+        require!(
+            new_token_total <= pool.max_token_supply,
+            PoolError::MaxTokenSupplyReached
+        );
 
-        // Increment total contributors if this is the first contribution
-        if user_contribution.amount == 0 {
+        // Mint tokens to user
+        let seeds = &[
+            b"authority",
+            pool.pool_seed.as_bytes(),
+            &[pool.authority_bump],
+        ];
+        let signer = &[&seeds[..]];
+        let mint_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.token_mint.to_account_info(),
+                to: ctx.accounts.user_token_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
+            },
+            signer,
+        );
+        token::mint_to(mint_ctx, tokens_to_mint)?;
+
+        // Update pool and user contribution state
+        pool.current_cap = new_pool_total;
+        pool.total_tokens_minted = new_token_total;
+        user_contribution.amount = new_user_total;
+
+        // Increment total contributors if this is the user's first contribution
+        if user_contribution.amount == amount {
             pool.total_contributors = pool
                 .total_contributors
                 .checked_add(1)
                 .ok_or(PoolError::Overflow)?;
         }
 
-        // Update user contribution amount
-        user_contribution.amount = new_user_contribution;
-
-        // Emit event
         emit!(Contributed {
-            user: user_key,
+            user: user.key(),
             pool: pool.key(),
             usdc_amount: amount,
             tokens_minted: tokens_to_mint,
@@ -498,25 +449,18 @@ pub mod contribute {
         Ok(())
     }
 
-    /// Toggle the enabled status of the pool
+    /// Toggle pool enabled status
     pub fn toggle_enabled(
         ctx: Context<UpdatePoolConfig>,
-        pool_seed: String,
+        _pool_seed: String,
         enabled: bool,
     ) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
         let admin = &ctx.accounts.admin;
 
-        // Verify pool seed match
-        require!(pool_seed == pool.pool_seed, PoolError::PoolSeedMismatch);
-
-        // Verify admin permission - only the pool's admin can update it
-        require!(admin.key() == pool.admin, AdminError::Unauthorized);
-
-        // Update enabled status
+        // Update pool status
         pool.enabled = enabled;
 
-        // Emit event
         emit!(PoolStatusChanged {
             pool: pool.key(),
             enabled,
@@ -526,68 +470,45 @@ pub mod contribute {
         Ok(())
     }
 
-    /// Recover tokens that were accidentally sent to the pool authority
+    /// Recover tokens from a pool
     pub fn recover_tokens(
         ctx: Context<RecoverTokens>,
-        pool_seed: String,
+        _pool_seed: String,
         amount: u64,
     ) -> Result<()> {
         let pool = &ctx.accounts.pool;
+        let admin = &ctx.accounts.admin;
 
-        // Verify pool seed match
-        require!(pool_seed == pool.pool_seed, PoolError::PoolSeedMismatch);
-
-        // Only the pool admin can recover tokens
-        require!(
-            ctx.accounts.admin.key() == pool.admin,
-            AdminError::Unauthorized
-        );
-
-        // Ensure we're only recovering tokens that were mistakenly sent to the pool authority
-        // and not the tokens that are part of the official pool
-        if ctx.accounts.token_mint.key() == pool.token_mint {
-            // If recovering the pool's own token, make sure it doesn't affect the accounting
-            require!(
-                amount <= ctx.accounts.token_account.amount,
-                PoolError::InsufficientFunds
-            );
-        }
-
-        // Create signer seeds for the authority
-        let signer_seeds: &[&[&[u8]]] = &[&[
+        // Transfer tokens from pool to recipient
+        let seeds = &[
             b"authority",
             pool.pool_seed.as_bytes(),
             &[pool.authority_bump],
-        ]];
+        ];
+        let signer = &[&seeds[..]];
+        let transfer_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.token_account.to_account_info(),
+                to: ctx.accounts.recipient_token_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
+            },
+            signer,
+        );
+        token::transfer(transfer_ctx, amount)?;
 
-        // Transfer the tokens from the authority to the recipient
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.token_account.to_account_info(),
-                    to: ctx.accounts.recipient_token_account.to_account_info(),
-                    authority: ctx.accounts.authority.to_account_info(),
-                },
-                signer_seeds,
-            ),
-            amount,
-        )?;
-
-        // Emit recovery event
         emit!(TokensRecovered {
             pool: pool.key(),
             token_mint: ctx.accounts.token_mint.key(),
             amount,
             recipient: ctx.accounts.recipient.key(),
-            admin: ctx.accounts.admin.key(),
+            admin: admin.key(),
         });
 
         Ok(())
     }
 }
 
-// Account contexts for admin registry operations
 #[derive(Accounts)]
 pub struct InitializeAdminRegistry<'info> {
     #[account(mut)]
@@ -615,7 +536,7 @@ pub struct UpdateAdminRegistry<'info> {
         mut,
         seeds = [ADMIN_REGISTRY_SEED],
         bump = admin_registry.bump,
-        realloc = 8 + AdminRegistry::BASE_SIZE + 32 * admin_registry.authorized_admins.len(),
+        realloc = 8 + AdminRegistry::BASE_SIZE + 32 * (admin_registry.authorized_admins.len() + 1),
         realloc::payer = super_admin,
         realloc::zero = false,
     )]
@@ -625,13 +546,12 @@ pub struct UpdateAdminRegistry<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(pool_seed: String)]
 pub struct GetContribution<'info> {
     pub user: Signer<'info>,
 
     #[account(
-        seeds = [b"pool", pool_seed.as_bytes()],
-        bump
+        seeds = [b"pool", pool.pool_seed.as_bytes()],
+        bump = pool.bump
     )]
     pub pool: Account<'info, Pool>,
 
@@ -673,6 +593,9 @@ pub struct CreatePool<'info> {
 
     /// CHECK: This is the PDA that will be the authority for the token mint
     #[account(
+        init,
+        payer = admin,
+        space = 0,
         seeds = [b"authority", pool_seed.as_bytes()],
         bump
     )]
@@ -684,14 +607,13 @@ pub struct CreatePool<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(pool_seed: String)]
 pub struct InitUserContribution<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
     #[account(
-        seeds = [b"pool", pool_seed.as_bytes()],
-        bump
+        seeds = [b"pool", pool.pool_seed.as_bytes()],
+        bump = pool.bump
     )]
     pub pool: Account<'info, Pool>,
 
@@ -709,15 +631,14 @@ pub struct InitUserContribution<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(pool_seed: String, amount: u64)]
 pub struct Contribute<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
     #[account(
         mut,
-        seeds = [b"pool", pool_seed.as_bytes()],
-        bump
+        seeds = [b"pool", pool.pool_seed.as_bytes()],
+        bump = pool.bump
     )]
     pub pool: Account<'info, Pool>,
 
@@ -742,6 +663,7 @@ pub struct Contribute<'info> {
         payer = user,
         associated_token::mint = usdc_mint, 
         associated_token::authority = recipient,
+        constraint = recipient_usdc_account.mint == usdc_mint.key()
     )]
     pub recipient_usdc_account: Account<'info, TokenAccount>,
 
@@ -782,29 +704,27 @@ pub struct Contribute<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(pool_seed: String)]
 pub struct UpdatePoolConfig<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
     #[account(
         mut,
-        seeds = [b"pool", pool_seed.as_bytes()],
-        bump,
+        seeds = [b"pool", pool.pool_seed.as_bytes()],
+        bump = pool.bump,
         constraint = admin.key() == pool.admin
     )]
     pub pool: Account<'info, Pool>,
 }
 
 #[derive(Accounts)]
-#[instruction(pool_seed: String, amount: u64)]
 pub struct RecoverTokens<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
     #[account(
-        seeds = [b"pool", pool_seed.as_bytes()],
-        bump,
+        seeds = [b"pool", pool.pool_seed.as_bytes()],
+        bump = pool.bump,
         constraint = admin.key() == pool.admin
     )]
     pub pool: Account<'info, Pool>,
@@ -838,7 +758,6 @@ pub struct RecoverTokens<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-// Account definitions
 #[account]
 pub struct AdminRegistry {
     pub super_admin: Pubkey, // Super admin who can add/remove admins
@@ -851,16 +770,11 @@ pub struct AdminRegistry {
 
 impl AdminRegistry {
     pub const BASE_SIZE: usize = 32 +  // super_admin
-                              33 +  // proposed_super_admin (Option<Pubkey>)
-                              8 +   // proposed_at
-                              8 +   // timelock_duration
-                              4 +   // Vec length prefix
-                              1; // bump
-
-    // Helper to calculate full size including vector elements
-    pub fn size_with_admins(admin_count: usize) -> usize {
-        Self::BASE_SIZE + (32 * admin_count) // Each Pubkey is 32 bytes
-    }
+        33 +                          // proposed_super_admin (Option<Pubkey>)
+        8 +                           // proposed_at (i64)
+        8 +                           // timelock_duration (i64)
+        4 +                           // authorized_admins vector length
+        1;                            // bump (u8)
 }
 
 #[account]
@@ -882,6 +796,27 @@ pub struct Pool {
     pub max_token_supply: u64,    // Maximum total tokens that can be minted
     pub total_tokens_minted: u64, // Total number of tokens minted so far
     pub total_contributors: u64,  // Total number of unique contributors
+    pub bump: u8,                 // Bump for pool PDA
+}
+
+impl Pool {
+    pub const LEN: usize = 32 + // admin
+        32 +                    // usdc_recipient
+        8 +                     // current_cap
+        1 +                     // enabled
+        32 +                    // token_mint
+        32 +                    // token_name (max length)
+        10 +                    // token_symbol (max length)
+        32 +                    // pool_seed (max length)
+        32 +                    // authority
+        1 +                     // authority_bump
+        32 +                    // usdc_mint
+        8 +                     // min_contribution
+        8 +                     // max_contribution
+        8 +                     // max_usdc_cap
+        8 +                     // max_token_supply
+        8 +                     // total_tokens_minted
+        8;                      // total_contributors
 }
 
 #[account]
@@ -891,33 +826,12 @@ pub struct UserContribution {
     pub amount: u64,  // Total contribution amount
 }
 
-impl Pool {
-    pub const LEN: usize = 32 + // admin
-                           32 + // usdc_recipient
-                           8 +  // current_cap
-                           1 +  // enabled
-                           32 + // token_mint
-                           64 + // token_name (max length)
-                           16 + // token_symbol (max length)
-                           64 + // pool_seed (max length)
-                           32 + // authority
-                           1 +  // authority_bump
-                           32 + // usdc_mint
-                           8 +  // min_contribution
-                           8 +  // max_contribution
-                           8 +  // max_usdc_cap
-                           8 +  // max_token_supply
-                           8 +  // total_tokens_minted
-                           8; // total_contributors
-}
-
 impl UserContribution {
     pub const LEN: usize = 32 + // user
-                           32 + // pool
-                           8; // amount
+        32 +                    // pool
+        8;                      // amount
 }
 
-// Error definitions
 #[error_code]
 pub enum PoolError {
     #[msg("Invalid parameter")]
@@ -955,6 +869,15 @@ pub enum PoolError {
 
     #[msg("Insufficient funds for the operation")]
     InsufficientFunds,
+
+    #[msg("Invalid token mint")]
+    InvalidTokenMint,
+    
+    #[msg("Invalid USDC mint")]
+    InvalidUsdcMint,
+    
+    #[msg("Invalid authority")]
+    InvalidAuthority,
 }
 
 #[error_code]
