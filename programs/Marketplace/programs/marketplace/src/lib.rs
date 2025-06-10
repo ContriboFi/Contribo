@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-declare_id!("FZe9i7PEgbCTBzAq9LVvhXSBxVU58AnDYmNLoTXQdSnM");
+declare_id!("P ROGRAM_ID");
 
 #[program]
 pub mod lct_marketplace {
@@ -827,7 +827,7 @@ pub struct BuyFromSellerOffer<'info> {
     )]
     pub offer: Account<'info, Offer>,
 
-    /// The original seller of the tokens
+    /// CHECK: This is safe because we check seller.key() == offer.seller above
     #[account(
         constraint = seller.key() == offer.seller @ MarketplaceError::SellerMismatch
     )]
@@ -954,7 +954,7 @@ pub struct AcceptBuyerBid<'info> {
     )]
     pub bid: Account<'info, Bid>,
 
-    /// The original buyer who placed the bid
+    /// CHECK: This is safe because we check buyer.key() == bid.buyer above
     #[account(
         constraint = buyer.key() == bid.buyer @ MarketplaceError::BuyerMismatch
     )]

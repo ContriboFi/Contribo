@@ -1,0 +1,44 @@
+# Rust build artifacts
+**/target/
+**/*.rs.bk
+**/Cargo.lock
+
+# Node.js dependencies
+**/node_modules/
+**/package-lock.json
+**/yarn.lock
+
+# Anchor build artifacts
+**/.anchor/
+**/target/
+**/build/
+**/dist/
+**/programs/*/target/
+**/programs/*/build/
+**/programs/*/dist/
+
+# IDL files
+**/target/idl/
+**/target/types/
+**/target/deploy/
+
+# Test files
+**/test-ledger/
+**/test-validator.log
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.*.local
+
+# IDE files
+**/.idea/
+**/.vscode/
+**/*.swp
+**/*.swo
+**/.DS_Store
+
+# Program specific
+**/wallet-keypair.json
+**/pool-setup-info.json
+**/onchain_idl.json 
