@@ -1,12 +1,8 @@
-# Contribo
-
-![Demo](assets/demo/2024-10-01%2001.15.41.jpg)
-
-
-
 
 
 # Contribo 🛠️🚀
+
+![image](https://github.com/user-attachments/assets/16fd3137-61a3-42e6-a5ad-5aa54cdda4fa)
 
 **Contribo** is a platform that transforms community capital into productive development.  
 Builders earn **USDC** for completing tasks.  
